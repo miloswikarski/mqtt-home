@@ -19,6 +19,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
 
     var mqttConfig: MQTTConfig!
     var mqttClient: MQTTClient!
+    var CurrentTime: Double = 0.0
 
     @IBAction func clrLbl(_ sender: Any) {
         lbl.text = ""
@@ -35,6 +36,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(true)
+        CurrentTime = CACurrentMediaTime()
         self.showMsg(msg: "..." )
         
         mqttConfig = MQTTConfig(clientId: "iOS simple MQTT client", host: Defaults[.mqttserver] ?? "test.mosquitto.org", port: Int32(Defaults[.mqttport] ?? 1883), keepAlive: 60)
@@ -45,6 +47,8 @@ class ViewController: UIViewController, UITextFieldDelegate {
         }
         mqttConfig.onMessageCallback = { mqttMessage in
             NSLog("MQTT Message received: payload=\(String(describing: mqttMessage.payloadString))")
+            let ct = CACurrentMediaTime()
+            self.showMsg(msg: "ping-pong: \( Int((ct - self.CurrentTime)*1000) ) ms")
             DispatchQueue.main.async {
                 self.lbl.text = (mqttMessage.payloadString ?? "") + "\n" + (self.lbl.text ?? "")
             }
@@ -81,6 +85,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
     @IBAction func goAll(_ sender: Any) {
         
         self.showMsg(msg: "Sending..." )
+        CurrentTime = CACurrentMediaTime()
         mqttClient.publish(string: self.txt.text ?? "", topic: Defaults[.topic] ?? "", qos: 0, retain: false)
         
     }
